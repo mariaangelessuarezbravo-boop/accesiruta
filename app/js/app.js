@@ -1,13 +1,14 @@
 /* ============================================
    AccesiRuta — Main App Controller
-   Hash-based routing, geolocation, PWA install
+   Hash-based routing, geolocation, PWA install,
+   Auth state management (Firebase + demo mode)
    ============================================ */
 
-const App = (function () {
+var App = (function () {
   'use strict';
 
   // Screen IDs mapped to hash routes
-  const SCREENS = {
+  var SCREENS = {
     '#inicio': 'screen-home',
     '#mapa': 'screen-map',
     '#reportar': 'screen-report',
@@ -16,17 +17,161 @@ const App = (function () {
     '#ruta': 'screen-route',
   };
 
-  const NAV_TABS = ['#inicio', '#mapa', '#reportar', '#sos', '#perfil'];
+  var NAV_TABS = ['#inicio', '#mapa', '#reportar', '#sos', '#perfil'];
 
-  let currentScreen = null;
-  let userPosition = null;
-  let deferredInstallPrompt = null;
+  var currentScreen = null;
+  var userPosition = null;
+  var deferredInstallPrompt = null;
+
+  // Auth state
+  var AUTH_KEY = 'accesiruta_auth';
+  var authState = null; // { type: 'google'|'demo'|'guest', name, photo, uid }
 
   /* --- Initialize --- */
   function init() {
     // Register service worker
     registerServiceWorker();
 
+    // Try to initialize Firebase
+    if (typeof FirebaseConfig !== 'undefined') {
+      FirebaseConfig.initialize();
+    }
+
+    // Check if user has a saved session
+    authState = loadAuthState();
+
+    if (authState) {
+      // User already logged in, show app
+      showApp();
+      bootApp();
+    } else {
+      // Show login screen
+      showLoginScreen();
+    }
+  }
+
+  /* --- Login Screen --- */
+  function showLoginScreen() {
+    var loginScreen = document.getElementById('login-screen');
+    var appShell = document.getElementById('app-shell');
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    if (appShell) appShell.style.display = 'none';
+
+    var firebaseConfigured = typeof FirebaseConfig !== 'undefined' && FirebaseConfig.isConfigured();
+
+    // Show/hide Google button vs demo section
+    var googleBtn = document.getElementById('login-google-btn');
+    var demoSection = document.getElementById('login-demo-section');
+
+    if (firebaseConfigured) {
+      if (googleBtn) googleBtn.style.display = 'flex';
+      if (demoSection) demoSection.style.display = 'none';
+    } else {
+      if (googleBtn) googleBtn.style.display = 'none';
+      if (demoSection) demoSection.style.display = 'block';
+    }
+
+    // Set up login handlers
+    setupLoginHandlers(firebaseConfigured);
+  }
+
+  function setupLoginHandlers(firebaseConfigured) {
+    // Google sign-in
+    var googleBtn = document.getElementById('login-google-btn');
+    if (googleBtn && firebaseConfigured) {
+      googleBtn.addEventListener('click', function () {
+        googleBtn.disabled = true;
+        googleBtn.querySelector('span').textContent = 'Conectando...';
+
+        FirebaseConfig.signInWithGoogle()
+          .then(function (result) {
+            var user = result.user;
+            authState = {
+              type: 'google',
+              name: user.displayName || 'Usuario',
+              photo: user.photoURL || null,
+              uid: user.uid,
+              email: user.email,
+            };
+            saveAuthState(authState);
+            hideLoginScreen();
+            bootApp();
+          })
+          .catch(function (err) {
+            console.error('Error Google sign-in:', err);
+            googleBtn.disabled = false;
+            googleBtn.querySelector('span').textContent = 'Iniciar sesion con Google';
+            if (err.code !== 'auth/popup-closed-by-user') {
+              alert('Error al iniciar sesion: ' + err.message);
+            }
+          });
+      });
+    }
+
+    // Demo mode sign-in
+    var demoBtn = document.getElementById('login-demo-btn');
+    var demoInput = document.getElementById('login-demo-name');
+    if (demoBtn) {
+      demoBtn.addEventListener('click', function () {
+        var name = demoInput ? demoInput.value.trim() : '';
+        if (!name) {
+          if (demoInput) demoInput.focus();
+          return;
+        }
+        authState = {
+          type: 'demo',
+          name: name,
+          photo: null,
+          uid: 'demo_' + Date.now(),
+        };
+        saveAuthState(authState);
+        // Also update legacy profile name
+        localStorage.setItem('accesiruta_profile', name);
+        hideLoginScreen();
+        bootApp();
+      });
+
+      // Allow Enter key on input
+      if (demoInput) {
+        demoInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            demoBtn.click();
+          }
+        });
+      }
+    }
+
+    // Guest mode
+    var guestBtn = document.getElementById('login-guest-btn');
+    if (guestBtn) {
+      guestBtn.addEventListener('click', function () {
+        authState = {
+          type: 'guest',
+          name: 'Invitado',
+          photo: null,
+          uid: 'guest_' + Date.now(),
+        };
+        saveAuthState(authState);
+        hideLoginScreen();
+        bootApp();
+      });
+    }
+  }
+
+  function hideLoginScreen() {
+    var loginScreen = document.getElementById('login-screen');
+    if (loginScreen) loginScreen.classList.add('hidden');
+    showApp();
+  }
+
+  function showApp() {
+    var appShell = document.getElementById('app-shell');
+    if (appShell) appShell.style.display = 'flex';
+  }
+
+  /* --- Boot App (after auth) --- */
+  function bootApp() {
     // Set up navigation
     setupNavigation();
 
@@ -51,7 +196,121 @@ const App = (function () {
     // Populate home screen
     populateHome();
 
+    // Update UI with auth info
+    updateAuthUI();
+
+    // Listen for Firebase auth state changes (if configured)
+    if (typeof FirebaseConfig !== 'undefined' && FirebaseConfig.isConfigured()) {
+      FirebaseConfig.onAuthStateChanged(function (user) {
+        if (user) {
+          authState = {
+            type: 'google',
+            name: user.displayName || 'Usuario',
+            photo: user.photoURL || null,
+            uid: user.uid,
+            email: user.email,
+          };
+          saveAuthState(authState);
+          updateAuthUI();
+        }
+      });
+    }
+
     console.log('AccesiRuta inicializada');
+  }
+
+  /* --- Auth State Persistence --- */
+  function loadAuthState() {
+    try {
+      var data = localStorage.getItem(AUTH_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveAuthState(state) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(state));
+  }
+
+  function clearAuthState() {
+    localStorage.removeItem(AUTH_KEY);
+    authState = null;
+  }
+
+  function getAuthState() {
+    return authState;
+  }
+
+  function getUserName() {
+    if (authState && authState.name) return authState.name;
+    // Fallback to legacy profile name
+    return localStorage.getItem('accesiruta_profile') || 'Usuario';
+  }
+
+  function getUserPhoto() {
+    return (authState && authState.photo) ? authState.photo : null;
+  }
+
+  function getUserUid() {
+    return (authState && authState.uid) ? authState.uid : 'anonymous';
+  }
+
+  function isFirebaseAuth() {
+    return authState && authState.type === 'google';
+  }
+
+  /* --- Update UI with auth info --- */
+  function updateAuthUI() {
+    // Update greeting on home
+    var homeGreeting = document.getElementById('home-greeting-name');
+    if (homeGreeting) homeGreeting.textContent = getUserName();
+
+    // Update profile display
+    if (typeof Profile !== 'undefined') Profile.refresh();
+
+    // Update sync indicators
+    updateSyncIndicators();
+  }
+
+  /* --- Sync indicators --- */
+  function updateSyncIndicators() {
+    var isCloud = typeof FirebaseConfig !== 'undefined' && FirebaseConfig.isConfigured();
+    var indicators = document.querySelectorAll('.sync-indicator');
+
+    indicators.forEach(function (el) {
+      el.style.display = 'flex';
+      el.classList.remove('sync-cloud', 'sync-local');
+
+      var iconEl = el.querySelector('.sync-icon');
+      var textEl = el.querySelector('.sync-text');
+
+      if (isCloud) {
+        el.classList.add('sync-cloud');
+        if (iconEl) iconEl.textContent = '\u2601\uFE0F'; // cloud
+        if (textEl) textEl.textContent = 'Guardado en la nube';
+      } else {
+        el.classList.add('sync-local');
+        if (iconEl) iconEl.textContent = '\uD83D\uDCF1'; // phone
+        if (textEl) textEl.textContent = 'Guardado localmente';
+      }
+    });
+  }
+
+  /* --- Logout --- */
+  function logout() {
+    // Sign out from Firebase if applicable
+    if (typeof FirebaseConfig !== 'undefined' && FirebaseConfig.isConfigured()) {
+      FirebaseConfig.signOut().catch(function (err) {
+        console.warn('Error signing out:', err);
+      });
+    }
+
+    clearAuthState();
+
+    // Reload to show login screen
+    window.location.hash = '';
+    window.location.reload();
   }
 
   /* --- Service Worker --- */
@@ -142,7 +401,7 @@ const App = (function () {
   /* --- Geolocation --- */
   function requestGeolocation() {
     if (!navigator.geolocation) {
-      console.warn('Geolocalización no disponible');
+      console.warn('Geolocalizacion no disponible');
       userPosition = { lat: 40.4168, lng: -3.7038 }; // Madrid fallback
       return;
     }
@@ -153,14 +412,14 @@ const App = (function () {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         };
-        console.log('Ubicación obtenida:', userPosition);
+        console.log('Ubicacion obtenida:', userPosition);
         // Update map if open
         if (typeof MapModule !== 'undefined') {
           MapModule.setUserPosition(userPosition);
         }
       },
       function (err) {
-        console.warn('Error obteniendo ubicación:', err.message);
+        console.warn('Error obteniendo ubicacion:', err.message);
         userPosition = { lat: 40.4168, lng: -3.7038 };
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
@@ -206,7 +465,7 @@ const App = (function () {
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
     deferredInstallPrompt.userChoice.then(function (result) {
-      console.log('Instalación:', result.outcome);
+      console.log('Instalacion:', result.outcome);
       deferredInstallPrompt = null;
       var banner = document.getElementById('install-banner');
       if (banner) banner.classList.remove('show');
@@ -258,16 +517,16 @@ const App = (function () {
 
     if (recent.length === 0) {
       recentContainer.innerHTML =
-        '<p style="color:var(--gray-400);font-size:14px;text-align:center;padding:20px 0;">Aún no hay reportes. ¡Sé el primero!</p>';
+        '<p style="color:var(--gray-400);font-size:14px;text-align:center;padding:20px 0;">Aun no hay reportes. Se el primero!</p>';
       return;
     }
 
     var typeIcons = {
-      rampa: '♿',
-      escaleras: '🪜',
-      banco: '🪑',
-      pendiente: '⛰️',
-      obstaculo: '🚧',
+      rampa: '\u267F',
+      escaleras: '\uD83E\uDE9C',
+      banco: '\uD83E\uDE91',
+      pendiente: '\u26F0\uFE0F',
+      obstaculo: '\uD83D\uDEA7',
     };
     var typeBgs = {
       rampa: 'background:var(--sky-100)',
@@ -281,25 +540,29 @@ const App = (function () {
       escaleras: 'Escaleras',
       banco: 'Banco/Descanso',
       pendiente: 'Pendiente',
-      obstaculo: 'Obstáculo',
+      obstaculo: 'Obstaculo',
     };
 
     var html = '';
     recent.forEach(function (r) {
-      var icon = typeIcons[r.type] || '📍';
+      var icon = typeIcons[r.type] || '\uD83D\uDCCD';
       var bg = typeBgs[r.type] || 'background:var(--gray-100)';
       var name = typeNames[r.type] || r.type;
       var stars = '';
       for (var i = 0; i < 5; i++) {
-        stars += i < r.rating ? '★' : '☆';
+        stars += i < r.rating ? '\u2605' : '\u2606';
       }
       var timeAgo = getTimeAgo(r.timestamp);
+
+      // Show user name if available on the report
+      var authorName = r.userName || getUserName();
+
       html +=
         '<div class="report-card" role="article">' +
         '<div class="rc-icon" style="' + bg + '">' + icon + '</div>' +
         '<div class="rc-info">' +
         '<div class="rc-type">' + escapeHtml(name) + '</div>' +
-        '<div class="rc-detail">' + escapeHtml(r.comment || 'Sin comentario') + ' · ' + timeAgo + '</div>' +
+        '<div class="rc-detail">' + escapeHtml(r.comment || 'Sin comentario') + ' \u00B7 ' + escapeHtml(authorName) + ' \u00B7 ' + timeAgo + '</div>' +
         '</div>' +
         '<div class="rc-rating">' + stars + '</div>' +
         '</div>';
@@ -342,6 +605,15 @@ const App = (function () {
     getFontSize: getFontSize,
     escapeHtml: escapeHtml,
     getTimeAgo: getTimeAgo,
+    // Auth API
+    getAuthState: getAuthState,
+    getUserName: getUserName,
+    getUserPhoto: getUserPhoto,
+    getUserUid: getUserUid,
+    isFirebaseAuth: isFirebaseAuth,
+    logout: logout,
+    updateSyncIndicators: updateSyncIndicators,
+    populateHome: populateHome,
   };
 })();
 

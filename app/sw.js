@@ -3,11 +3,12 @@
    Cache-first for app assets, network-first for APIs
    ============================================ */
 
-var CACHE_VERSION = 'accesiruta-v3';
+var CACHE_VERSION = 'accesiruta-v4';
 var APP_SHELL_FILES = [
   './',
   './index.html',
   './css/styles.css',
+  './js/firebase-config.js',
   './js/app.js',
   './js/map.js',
   './js/reports.js',

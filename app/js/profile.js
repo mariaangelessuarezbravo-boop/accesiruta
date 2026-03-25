@@ -1,6 +1,7 @@
 /* ============================================
    AccesiRuta — Profile & Community Module
-   User profile, stats, settings, community feed
+   User profile with Google photo support,
+   stats, settings, community feed (Firestore or localStorage)
    ============================================ */
 
 var Profile = (function () {
@@ -15,6 +16,7 @@ var Profile = (function () {
     setupProfileName();
     setupFontSize();
     setupAddContact();
+    setupLogout();
     refresh();
   }
 
@@ -25,10 +27,25 @@ var Profile = (function () {
     if (!nameEl || !editBtn) return;
 
     editBtn.addEventListener('click', function () {
+      var authState = typeof App !== 'undefined' ? App.getAuthState() : null;
+
+      // If logged in with Google, name comes from Google
+      if (authState && authState.type === 'google') {
+        App.showToast('El nombre viene de tu cuenta de Google');
+        return;
+      }
+
       var current = getName();
       var newName = prompt('Tu nombre:', current);
       if (newName !== null && newName.trim() !== '') {
         saveName(newName.trim());
+
+        // Update auth state if in demo mode
+        if (authState && authState.type === 'demo') {
+          authState.name = newName.trim();
+          localStorage.setItem('accesiruta_auth', JSON.stringify(authState));
+        }
+
         refresh();
         App.showToast('Nombre actualizado');
       }
@@ -36,6 +53,10 @@ var Profile = (function () {
   }
 
   function getName() {
+    // Prefer auth state name
+    if (typeof App !== 'undefined' && App.getUserName) {
+      return App.getUserName();
+    }
     return localStorage.getItem(PROFILE_KEY) || 'Usuario';
   }
 
@@ -84,7 +105,7 @@ var Profile = (function () {
         if (idx > 0) {
           App.applyFontSize(sizes[idx - 1]);
           updateLabel();
-          App.showToast('Tamaño: ' + sizeLabels[sizes[idx - 1]]);
+          App.showToast('Tamano: ' + sizeLabels[sizes[idx - 1]]);
         }
       });
     }
@@ -96,7 +117,7 @@ var Profile = (function () {
         if (idx < sizes.length - 1) {
           App.applyFontSize(sizes[idx + 1]);
           updateLabel();
-          App.showToast('Tamaño: ' + sizeLabels[sizes[idx + 1]]);
+          App.showToast('Tamano: ' + sizeLabels[sizes[idx + 1]]);
         }
       });
     }
@@ -118,7 +139,7 @@ var Profile = (function () {
       var phone = phoneInput.value.trim();
 
       if (!name || !phone) {
-        App.showToast('Introduce nombre y teléfono');
+        App.showToast('Introduce nombre y telefono');
         return;
       }
 
@@ -126,20 +147,76 @@ var Profile = (function () {
         SOS.addContact(name, phone);
         nameInput.value = '';
         phoneInput.value = '';
-        App.showToast('Contacto añadido');
+        App.showToast('Contacto anadido');
+      }
+    });
+  }
+
+  /* --- Logout --- */
+  function setupLogout() {
+    var logoutBtn = document.getElementById('profile-logout-btn');
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener('click', function () {
+      if (confirm('Seguro que quieres cerrar sesion?')) {
+        if (typeof App !== 'undefined') {
+          App.logout();
+        }
       }
     });
   }
 
   /* --- Refresh Profile Screen --- */
   function refresh() {
+    var userName = getName();
+    var userPhoto = typeof App !== 'undefined' ? App.getUserPhoto() : null;
+    var authState = typeof App !== 'undefined' ? App.getAuthState() : null;
+
     // Name
     var nameDisplay = document.getElementById('profile-name-display');
-    if (nameDisplay) nameDisplay.textContent = getName();
+    if (nameDisplay) nameDisplay.textContent = userName;
 
     // Greeting on home
     var homeGreeting = document.getElementById('home-greeting-name');
-    if (homeGreeting) homeGreeting.textContent = getName();
+    if (homeGreeting) homeGreeting.textContent = userName;
+
+    // Avatar
+    var avatarEl = document.getElementById('profile-avatar');
+    if (avatarEl) {
+      if (userPhoto) {
+        avatarEl.innerHTML = '<img src="' + escapeAttr(userPhoto) + '" alt="Foto de perfil" referrerpolicy="no-referrer">';
+      } else {
+        avatarEl.innerHTML = '\u267F'; // wheelchair symbol
+      }
+    }
+
+    // Auth info badge
+    var authInfoEl = document.getElementById('profile-auth-info');
+    var authBadge = document.getElementById('auth-badge');
+    if (authInfoEl && authBadge && authState) {
+      authInfoEl.style.display = 'block';
+      if (authState.type === 'google') {
+        authBadge.textContent = 'Google \u00B7 ' + (authState.email || '');
+      } else if (authState.type === 'demo') {
+        authBadge.textContent = 'Modo demo';
+      } else {
+        authBadge.textContent = 'Invitado';
+      }
+    }
+
+    // Show/hide logout button
+    var logoutSection = document.getElementById('profile-logout-section');
+    if (logoutSection) {
+      logoutSection.style.display = authState ? 'block' : 'none';
+    }
+
+    // Show/hide edit name button (hide for Google users)
+    var editNameBtn = document.getElementById('profile-name-edit');
+    if (editNameBtn && authState && authState.type === 'google') {
+      editNameBtn.style.visibility = 'hidden';
+    } else if (editNameBtn) {
+      editNameBtn.style.visibility = 'visible';
+    }
 
     // Stats
     var reportCount = document.getElementById('stat-reports');
@@ -159,6 +236,11 @@ var Profile = (function () {
     if (typeof SOS !== 'undefined') {
       SOS.renderContacts();
     }
+
+    // Sync indicator
+    if (typeof App !== 'undefined' && App.updateSyncIndicators) {
+      App.updateSyncIndicators();
+    }
   }
 
   /* --- Community Feed --- */
@@ -171,7 +253,7 @@ var Profile = (function () {
 
     if (recent.length === 0) {
       container.innerHTML =
-        '<p style="font-size:14px;color:var(--gray-400);text-align:center;padding:16px;">La comunidad aún no tiene actividad.</p>';
+        '<p style="font-size:14px;color:var(--gray-400);text-align:center;padding:16px;">La comunidad aun no tiene actividad.</p>';
       return;
     }
 
@@ -180,28 +262,39 @@ var Profile = (function () {
       escaleras: 'escaleras',
       banco: 'zona de descanso',
       pendiente: 'pendiente pronunciada',
-      obstaculo: 'obstáculo en la vía',
+      obstaculo: 'obstaculo en la via',
     };
 
-    var name = getName();
     var html = '';
     recent.forEach(function (r) {
       var timeAgo = App.getTimeAgo(r.timestamp);
       var typeName = typeNames[r.type] || r.type;
       var stars = '';
       for (var i = 0; i < 5; i++) {
-        stars += i < r.rating ? '★' : '☆';
+        stars += i < r.rating ? '\u2605' : '\u2606';
+      }
+
+      // Use report's stored user info, or fall back to current user
+      var reportName = r.userName || getName();
+      var reportPhoto = r.userPhoto || null;
+
+      // Build avatar HTML
+      var avatarHtml;
+      if (reportPhoto) {
+        avatarHtml = '<img src="' + escapeAttr(reportPhoto) + '" alt="" referrerpolicy="no-referrer">';
+      } else {
+        avatarHtml = '\uD83D\uDC64'; // bust silhouette
       }
 
       html +=
         '<div class="community-item">' +
         '<div class="ci-header">' +
-        '<div class="ci-avatar">👤</div>' +
-        '<span class="ci-name">' + App.escapeHtml(name) + '</span>' +
+        '<div class="ci-avatar">' + avatarHtml + '</div>' +
+        '<span class="ci-name">' + App.escapeHtml(reportName) + '</span>' +
         '<span class="ci-time">' + timeAgo + '</span>' +
         '</div>' +
         '<div class="ci-body">' +
-        'Reportó <strong>' + App.escapeHtml(typeName) + '</strong> ' +
+        'Report\u00F3 <strong>' + App.escapeHtml(typeName) + '</strong> ' +
         '<span style="color:var(--yellow-500);">' + stars + '</span>' +
         (r.comment ? '<br>' + App.escapeHtml(r.comment) : '') +
         '</div>' +
@@ -209,6 +302,11 @@ var Profile = (function () {
     });
 
     container.innerHTML = html;
+  }
+
+  /* --- Helper --- */
+  function escapeAttr(str) {
+    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   /* --- Public API --- */

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AccesiRuta">
-  <meta name="description" content="AccesiRuta — La ruta accesible para ti. Navegación accesible para personas con discapacidad en España.">
+  <meta name="description" content="AccesiRuta — La ruta accesible para ti. Navegacion accesible para personas con discapacidad en Espana.">
   <meta name="mobile-web-app-capable" content="yes">
 
   <link rel="manifest" href="manifest.json">
@@ -20,7 +20,50 @@
 </head>
 <body>
 
-  <div class="app-shell" role="application" aria-label="AccesiRuta - Aplicación de navegación accesible">
+  <!-- ============================================
+       LOGIN SCREEN (shown before main app)
+       ============================================ -->
+  <div id="login-screen" class="login-screen" role="main" aria-label="Pantalla de inicio de sesion">
+    <div class="login-bg">
+      <div class="login-card">
+        <!-- Logo -->
+        <div class="login-logo" aria-hidden="true">&#9855;</div>
+        <h1 class="login-title">AccesiRuta</h1>
+        <p class="login-subtitle">La ruta accesible para ti</p>
+
+        <!-- Google Sign-In (shown when Firebase is configured) -->
+        <button id="login-google-btn" class="login-google-btn" aria-label="Iniciar sesion con Google" style="display:none;">
+          <svg class="google-logo" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Iniciar sesion con Google</span>
+        </button>
+
+        <!-- Demo Mode login (shown when Firebase is NOT configured) -->
+        <div id="login-demo-section" class="login-demo-section">
+          <p class="login-demo-label">Modo demo</p>
+          <div class="login-demo-form">
+            <input type="text" id="login-demo-name" class="login-demo-input" placeholder="Tu nombre" aria-label="Introduce tu nombre" maxlength="40">
+            <button id="login-demo-btn" class="login-demo-btn" aria-label="Entrar como invitado">
+              Entrar
+            </button>
+          </div>
+        </div>
+
+        <!-- Guest option -->
+        <button id="login-guest-btn" class="login-guest-link" aria-label="Continuar como invitado">
+          Continuar como invitado
+        </button>
+
+        <p class="login-footer-text">Tu privacidad es nuestra prioridad</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell" id="app-shell" role="application" aria-label="AccesiRuta - Aplicacion de navegacion accesible" style="display:none;">
 
     <!-- ============================================
          SCREEN: HOME (Inicio)
@@ -29,40 +72,40 @@
 
       <!-- Hero -->
       <div class="home-hero">
-        <p class="greeting">Hola, <span id="home-greeting-name">Usuario</span> 👋</p>
+        <p class="greeting">Hola, <span id="home-greeting-name">Usuario</span> &#128075;</p>
         <h1>AccesiRuta</h1>
         <p class="tagline">La ruta accesible para ti</p>
 
         <div class="search-bar" role="search">
-          <span class="search-icon" aria-hidden="true">🔍</span>
+          <span class="search-icon" aria-hidden="true">&#128269;</span>
           <input type="text" placeholder="Buscar un lugar accesible..." aria-label="Buscar lugar accesible" id="home-search">
         </div>
       </div>
 
       <!-- Quick Actions -->
-      <h2 class="section-title">Acciones rápidas</h2>
-      <div class="quick-actions" role="navigation" aria-label="Acciones rápidas">
+      <h2 class="section-title">Acciones rapidas</h2>
+      <div class="quick-actions" role="navigation" aria-label="Acciones rapidas">
 
         <a href="#mapa" class="quick-action-card" role="button" aria-label="Ver mapa de accesibilidad">
-          <div class="qa-icon blue" aria-hidden="true">🗺️</div>
+          <div class="qa-icon blue" aria-hidden="true">&#128506;&#65039;</div>
           <span class="qa-label">Mapa</span>
           <span class="qa-desc">Explora puntos accesibles cerca</span>
         </a>
 
         <a href="#reportar" class="quick-action-card" role="button" aria-label="Reportar accesibilidad">
-          <div class="qa-icon green" aria-hidden="true">📝</div>
+          <div class="qa-icon green" aria-hidden="true">&#128221;</div>
           <span class="qa-label">Reportar</span>
           <span class="qa-desc">Informa sobre accesibilidad</span>
         </a>
 
         <a href="#sos" class="quick-action-card" role="button" aria-label="Emergencia SOS">
-          <div class="qa-icon red" aria-hidden="true">🆘</div>
+          <div class="qa-icon red" aria-hidden="true">&#127384;</div>
           <span class="qa-label">SOS</span>
           <span class="qa-desc">Pide ayuda de emergencia</span>
         </a>
 
         <a href="#perfil" class="quick-action-card" role="button" aria-label="Tu perfil y comunidad">
-          <div class="qa-icon orange" aria-hidden="true">👤</div>
+          <div class="qa-icon orange" aria-hidden="true">&#128100;</div>
           <span class="qa-label">Perfil</span>
           <span class="qa-desc">Tu actividad y ajustes</span>
         </a>
@@ -71,7 +114,7 @@
       <!-- Stats Banner -->
       <div style="padding:16px 20px;">
         <div style="background:var(--green-50);border:1px solid var(--green-400);border-radius:var(--radius-md);padding:14px 16px;display:flex;align-items:center;gap:12px;">
-          <span style="font-size:28px;" aria-hidden="true">📊</span>
+          <span style="font-size:28px;" aria-hidden="true">&#128202;</span>
           <div>
             <div style="font-size:var(--font-sm);font-weight:600;color:var(--green-600);"><span id="home-report-count">0</span> reportes en tu zona</div>
             <div style="font-size:12px;color:var(--gray-500);">La comunidad mejora la accesibilidad</div>
@@ -79,10 +122,23 @@
         </div>
       </div>
 
+      <!-- Sync indicator -->
+      <div class="sync-indicator" id="home-sync-indicator" style="display:none;">
+        <span class="sync-icon" aria-hidden="true"></span>
+        <span class="sync-text"></span>
+      </div>
+
       <!-- Recent Reports -->
       <h2 class="section-title">Reportes recientes</h2>
       <div class="recent-reports" id="home-recent-reports" aria-label="Reportes recientes">
-        <p style="color:var(--gray-400);font-size:14px;text-align:center;padding:20px 0;">Aún no hay reportes. ¡Sé el primero!</p>
+        <p style="color:var(--gray-400);font-size:14px;text-align:center;padding:20px 0;">Aun no hay reportes. Se el primero!</p>
+      </div>
+
+      <!-- Ad Banner -->
+      <div class="ad-banner-container" id="ad-banner-home">
+        <div class="ad-banner-placeholder" id="ad-slot-home">
+          <span class="ad-banner-text">Espacio publicitario</span>
+        </div>
       </div>
 
     </section>
@@ -94,7 +150,7 @@
 
       <div class="header-bar">
         <h1>Mapa Accesible</h1>
-        <button class="header-icon" aria-label="Filtrar marcadores" onclick="App.showToast('Filtros próximamente')">⚙️</button>
+        <button class="header-icon" aria-label="Filtrar marcadores" onclick="App.showToast('Filtros proximamente')">&#9881;&#65039;</button>
       </div>
 
       <div class="map-container">
@@ -102,9 +158,9 @@
 
         <!-- Offline fallback -->
         <div id="map-offline" class="map-offline-msg" role="alert">
-          <span class="offline-icon" aria-hidden="true">📡</span>
+          <span class="offline-icon" aria-hidden="true">&#128225;</span>
           <h3>Mapa no disponible</h3>
-          <p>Necesitas conexión a Internet para ver el mapa. Tus reportes se guardan localmente.</p>
+          <p>Necesitas conexion a Internet para ver el mapa. Tus reportes se guardan localmente.</p>
         </div>
 
         <!-- Legend -->
@@ -113,11 +169,11 @@
           <div class="legend-item"><div class="legend-dot" style="background:#EAB308;"></div><span>Escaleras</span></div>
           <div class="legend-item"><div class="legend-dot" style="background:#22C55E;"></div><span>Banco</span></div>
           <div class="legend-item"><div class="legend-dot" style="background:#EF4444;"></div><span>Pendiente</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:#F97316;"></div><span>Obstáculo</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#F97316;"></div><span>Obstaculo</span></div>
         </div>
 
         <!-- Center on me FAB -->
-        <button class="map-fab" onclick="MapModule.centerOnUser()" aria-label="Centrar en mi ubicación">📍</button>
+        <button class="map-fab" onclick="MapModule.centerOnUser()" aria-label="Centrar en mi ubicacion">&#128205;</button>
       </div>
 
     </section>
@@ -129,7 +185,7 @@
 
       <div class="route-detail">
         <div class="route-header">
-          <button class="back-btn" onclick="App.navigate('#mapa')" aria-label="Volver al mapa">←</button>
+          <button class="back-btn" onclick="App.navigate('#mapa')" aria-label="Volver al mapa">&#8592;</button>
           <h2>Ruta accesible</h2>
         </div>
 
@@ -143,24 +199,24 @@
             <div class="ric-label">Tiempo</div>
           </div>
           <div class="route-info-card">
-            <div class="ric-value">4.2★</div>
+            <div class="ric-value">4.2&#9733;</div>
             <div class="ric-label">Accesibilidad</div>
           </div>
         </div>
 
         <div class="route-accessibility">
-          <h3>♿ Características de accesibilidad</h3>
+          <h3>&#9855; Caracteristicas de accesibilidad</h3>
           <div class="accessibility-tags">
-            <span class="a11y-tag">♿ Sin escalones</span>
-            <span class="a11y-tag">🪑 Bancos cada 200m</span>
-            <span class="a11y-tag">🚦 Semáforos sonoros</span>
-            <span class="a11y-tag">🛗 Ascensor disponible</span>
+            <span class="a11y-tag">&#9855; Sin escalones</span>
+            <span class="a11y-tag">&#129681; Bancos cada 200m</span>
+            <span class="a11y-tag">&#128678; Semaforos sonoros</span>
+            <span class="a11y-tag">&#128727; Ascensor disponible</span>
           </div>
         </div>
 
         <h3 style="font-size:var(--font-base);font-weight:600;margin-bottom:12px;color:var(--gray-700);">Reportes en esta ruta</h3>
         <div class="route-reports-list" id="route-reports">
-          <p style="color:var(--gray-400);font-size:14px;text-align:center;">No hay reportes en esta ruta aún.</p>
+          <p style="color:var(--gray-400);font-size:14px;text-align:center;">No hay reportes en esta ruta aun.</p>
         </div>
       </div>
 
@@ -181,44 +237,44 @@
         <!-- Location badge -->
         <div class="location-badge">
           <span class="loc-dot"></span>
-          <span>Usando tu ubicación actual</span>
+          <span>Usando tu ubicacion actual</span>
         </div>
 
         <!-- Type selection -->
-        <h3 style="font-size:var(--font-base);font-weight:600;color:var(--gray-700);margin-bottom:12px;">¿Qué quieres reportar?</h3>
+        <h3 style="font-size:var(--font-base);font-weight:600;color:var(--gray-700);margin-bottom:12px;">Que quieres reportar?</h3>
 
         <div class="report-type-grid" role="radiogroup" aria-label="Tipo de reporte">
           <button class="report-type-btn" data-type="rampa" role="radio" aria-checked="false" aria-label="Rampa accesible">
-            <span class="rt-icon" aria-hidden="true">♿</span>
+            <span class="rt-icon" aria-hidden="true">&#9855;</span>
             Rampa
           </button>
           <button class="report-type-btn" data-type="escaleras" role="radio" aria-checked="false" aria-label="Escaleras">
-            <span class="rt-icon" aria-hidden="true">🪜</span>
+            <span class="rt-icon" aria-hidden="true">&#129692;</span>
             Escaleras
           </button>
           <button class="report-type-btn" data-type="banco" role="radio" aria-checked="false" aria-label="Banco o zona de descanso">
-            <span class="rt-icon" aria-hidden="true">🪑</span>
+            <span class="rt-icon" aria-hidden="true">&#129681;</span>
             Descanso
           </button>
           <button class="report-type-btn" data-type="pendiente" role="radio" aria-checked="false" aria-label="Pendiente pronunciada">
-            <span class="rt-icon" aria-hidden="true">⛰️</span>
+            <span class="rt-icon" aria-hidden="true">&#9968;&#65039;</span>
             Pendiente
           </button>
-          <button class="report-type-btn" data-type="obstaculo" role="radio" aria-checked="false" aria-label="Obstáculo en la vía" style="grid-column: span 2;">
-            <span class="rt-icon" aria-hidden="true">🚧</span>
-            Obstáculo en la vía
+          <button class="report-type-btn" data-type="obstaculo" role="radio" aria-checked="false" aria-label="Obstaculo en la via" style="grid-column: span 2;">
+            <span class="rt-icon" aria-hidden="true">&#128679;</span>
+            Obstaculo en la via
           </button>
         </div>
 
         <!-- Star Rating -->
-        <h3 style="font-size:var(--font-base);font-weight:600;color:var(--gray-700);margin-bottom:12px;">¿Cómo es la accesibilidad?</h3>
+        <h3 style="font-size:var(--font-base);font-weight:600;color:var(--gray-700);margin-bottom:12px;">Como es la accesibilidad?</h3>
 
-        <div class="star-rating" role="radiogroup" aria-label="Valoración de accesibilidad">
-          <button class="star-btn" data-value="1" aria-label="1 estrella">☆</button>
-          <button class="star-btn" data-value="2" aria-label="2 estrellas">☆</button>
-          <button class="star-btn" data-value="3" aria-label="3 estrellas">☆</button>
-          <button class="star-btn" data-value="4" aria-label="4 estrellas">☆</button>
-          <button class="star-btn" data-value="5" aria-label="5 estrellas">☆</button>
+        <div class="star-rating" role="radiogroup" aria-label="Valoracion de accesibilidad">
+          <button class="star-btn" data-value="1" aria-label="1 estrella">&#9734;</button>
+          <button class="star-btn" data-value="2" aria-label="2 estrellas">&#9734;</button>
+          <button class="star-btn" data-value="3" aria-label="3 estrellas">&#9734;</button>
+          <button class="star-btn" data-value="4" aria-label="4 estrellas">&#9734;</button>
+          <button class="star-btn" data-value="5" aria-label="5 estrellas">&#9734;</button>
         </div>
         <p class="rating-label" id="rating-label">Toca una estrella para valorar</p>
 
@@ -230,18 +286,23 @@
           </div>
 
           <button type="submit" class="btn btn-success" aria-label="Enviar reporte">
-            ✅ Enviar reporte
+            &#9989; Enviar reporte
           </button>
         </form>
       </div>
 
       <!-- Success State -->
       <div class="report-success" id="report-success" role="alert">
-        <span class="success-icon" aria-hidden="true">🎉</span>
-        <h3>¡Reporte enviado!</h3>
+        <span class="success-icon" aria-hidden="true">&#127881;</span>
+        <h3>Reporte enviado!</h3>
         <p>Gracias por mejorar la accesibilidad de tu ciudad. Has ganado <strong>+10 puntos</strong>.</p>
+        <!-- Sync indicator for report -->
+        <div class="sync-indicator" id="report-sync-indicator" style="margin:8px 0;">
+          <span class="sync-icon" aria-hidden="true"></span>
+          <span class="sync-text"></span>
+        </div>
         <button class="btn btn-primary" onclick="App.navigate('#mapa')" style="max-width:280px;margin:0 auto;">
-          🗺️ Ver en el mapa
+          &#128506;&#65039; Ver en el mapa
         </button>
       </div>
 
@@ -253,35 +314,35 @@
     <section id="screen-sos" class="screen" role="main" aria-label="Emergencia SOS">
 
       <div class="header-bar" style="background:var(--red-600);">
-        <h1>🆘 Emergencia</h1>
+        <h1>&#127384; Emergencia</h1>
         <span></span>
       </div>
 
       <div class="sos-screen-content">
 
-        <h2>Botón de emergencia</h2>
+        <h2>Boton de emergencia</h2>
         <p class="sos-instructions">
-          Mantén pulsado el botón durante <strong>2 segundos</strong> para activar el SOS. Se enviará tu ubicación por SMS.
+          Manten pulsado el boton durante <strong>2 segundos</strong> para activar el SOS. Se enviara tu ubicacion por SMS.
         </p>
 
         <!-- SOS Hold Button -->
-        <button id="sos-hold-btn" class="sos-hold-btn" aria-label="Mantén pulsado 2 segundos para activar emergencia SOS">
+        <button id="sos-hold-btn" class="sos-hold-btn" aria-label="Manten pulsado 2 segundos para activar emergencia SOS">
           <div class="sos-countdown-ring">
             <svg viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="85"></circle>
             </svg>
           </div>
-          <span class="sos-emoji" aria-hidden="true">🆘</span>
+          <span class="sos-emoji" aria-hidden="true">&#127384;</span>
           <span class="sos-label">SOS</span>
         </button>
 
         <!-- Quick Actions -->
         <div class="sos-actions">
           <button id="sos-call-112" class="btn btn-danger" aria-label="Llamar al 112">
-            📞 Llamar al 112
+            &#128222; Llamar al 112
           </button>
           <button id="sos-send-sms" class="btn btn-outline" style="border-color:var(--red-500);color:var(--red-600);" aria-label="Enviar SMS de emergencia">
-            💬 Enviar SMS con ubicación
+            &#128172; Enviar SMS con ubicacion
           </button>
         </div>
 
@@ -289,7 +350,7 @@
         <div class="sos-contact-list">
           <h3>Contactos de emergencia</h3>
           <div id="sos-contacts-list" class="contacts-list">
-            <p style="font-size:14px;color:var(--gray-400);text-align:center;padding:10px;">No hay contactos de emergencia. Añade uno en tu perfil.</p>
+            <p style="font-size:14px;color:var(--gray-400);text-align:center;padding:10px;">No hay contactos de emergencia. Anade uno en tu perfil.</p>
           </div>
         </div>
 
@@ -304,20 +365,31 @@
 
       <div class="header-bar">
         <h1>Mi perfil</h1>
-        <button class="header-icon" id="profile-name-edit" aria-label="Editar nombre">✏️</button>
+        <button class="header-icon" id="profile-name-edit" aria-label="Editar nombre">&#9999;&#65039;</button>
       </div>
 
       <div class="profile-screen-content">
 
         <!-- Profile Card -->
         <div class="profile-card">
-          <div class="profile-avatar" aria-hidden="true">♿</div>
+          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">&#9855;</div>
           <div class="profile-name" id="profile-name-display">Usuario</div>
           <div class="profile-role">Explorador accesible</div>
+          <!-- Auth info -->
+          <div class="profile-auth-info" id="profile-auth-info" style="display:none;">
+            <span class="auth-badge" id="auth-badge"></span>
+          </div>
+        </div>
+
+        <!-- Logout button -->
+        <div id="profile-logout-section" style="display:none;margin-bottom:16px;">
+          <button id="profile-logout-btn" class="btn btn-outline" style="border-color:var(--red-500);color:var(--red-600);" aria-label="Cerrar sesion">
+            Cerrar sesion
+          </button>
         </div>
 
         <!-- Stats -->
-        <div class="profile-stats" aria-label="Estadísticas">
+        <div class="profile-stats" aria-label="Estadisticas">
           <div class="stat-card">
             <div class="stat-value" id="stat-reports">0</div>
             <div class="stat-label">Reportes</div>
@@ -332,18 +404,24 @@
           </div>
         </div>
 
+        <!-- Sync status -->
+        <div class="sync-indicator" id="profile-sync-indicator" style="display:none;margin-bottom:16px;">
+          <span class="sync-icon" aria-hidden="true"></span>
+          <span class="sync-text"></span>
+        </div>
+
         <!-- Font Size Setting -->
         <div class="settings-section">
           <h3>Ajustes de accesibilidad</h3>
           <div class="settings-item">
             <div class="settings-item-left">
-              <span class="settings-item-icon" aria-hidden="true">🔤</span>
-              <span class="settings-item-label">Tamaño de texto</span>
+              <span class="settings-item-icon" aria-hidden="true">&#128292;</span>
+              <span class="settings-item-label">Tamano de texto</span>
             </div>
             <div class="font-size-controls">
-              <button class="font-size-btn" id="font-decrease" aria-label="Reducir tamaño de texto">A-</button>
+              <button class="font-size-btn" id="font-decrease" aria-label="Reducir tamano de texto">A-</button>
               <span class="font-size-label" id="font-size-label">Normal</span>
-              <button class="font-size-btn" id="font-increase" aria-label="Aumentar tamaño de texto">A+</button>
+              <button class="font-size-btn" id="font-increase" aria-label="Aumentar tamano de texto">A+</button>
             </div>
           </div>
         </div>
@@ -357,8 +435,8 @@
 
           <div class="add-contact-row">
             <input type="text" id="contact-name-input" class="form-input" placeholder="Nombre" aria-label="Nombre del contacto" style="flex:1;">
-            <input type="tel" id="contact-phone-input" class="form-input" placeholder="Teléfono" aria-label="Teléfono del contacto" style="flex:1;">
-            <button id="add-contact-btn" class="btn btn-primary" style="width:auto;padding:0 16px;" aria-label="Añadir contacto">+</button>
+            <input type="tel" id="contact-phone-input" class="form-input" placeholder="Telefono" aria-label="Telefono del contacto" style="flex:1;">
+            <button id="add-contact-btn" class="btn btn-primary" style="width:auto;padding:0 16px;" aria-label="Anadir contacto">+</button>
           </div>
         </div>
 
@@ -366,7 +444,14 @@
         <div class="settings-section">
           <h3>Actividad de la comunidad</h3>
           <div class="community-feed" id="community-feed">
-            <p style="font-size:14px;color:var(--gray-400);text-align:center;padding:16px;">La comunidad aún no tiene actividad.</p>
+            <p style="font-size:14px;color:var(--gray-400);text-align:center;padding:16px;">La comunidad aun no tiene actividad.</p>
+          </div>
+        </div>
+
+        <!-- Ad Banner -->
+        <div class="ad-banner-container" id="ad-banner-profile">
+          <div class="ad-banner-placeholder" id="ad-slot-profile">
+            <span class="ad-banner-text">Espacio publicitario</span>
           </div>
         </div>
 
@@ -377,17 +462,17 @@
     <!-- ============================================
          BOTTOM NAVIGATION
          ============================================ -->
-    <nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+    <nav class="bottom-nav" role="navigation" aria-label="Navegacion principal">
       <button class="nav-item active" data-screen="#inicio" aria-label="Inicio" aria-current="page">
-        <span class="nav-icon" aria-hidden="true">🏠</span>
+        <span class="nav-icon" aria-hidden="true">&#127968;</span>
         <span>Inicio</span>
       </button>
       <button class="nav-item" data-screen="#mapa" aria-label="Mapa">
-        <span class="nav-icon" aria-hidden="true">🗺️</span>
+        <span class="nav-icon" aria-hidden="true">&#128506;&#65039;</span>
         <span>Mapa</span>
       </button>
       <button class="nav-item" data-screen="#reportar" aria-label="Reportar">
-        <span class="nav-icon" aria-hidden="true">📝</span>
+        <span class="nav-icon" aria-hidden="true">&#128221;</span>
         <span>Reportar</span>
       </button>
       <button class="nav-item nav-sos" data-screen="#sos" aria-label="Emergencia SOS">
@@ -395,7 +480,7 @@
         <span>SOS</span>
       </button>
       <button class="nav-item" data-screen="#perfil" aria-label="Perfil">
-        <span class="nav-icon" aria-hidden="true">👤</span>
+        <span class="nav-icon" aria-hidden="true">&#128100;</span>
         <span>Perfil</span>
       </button>
     </nav>
@@ -407,7 +492,7 @@
     <div id="install-banner" class="install-banner" role="alert">
       <div class="ib-text">
         <strong>Instalar AccesiRuta</strong>
-        Accede sin conexión y más rápido
+        Accede sin conexion y mas rapido
       </div>
       <button class="btn btn-primary" onclick="App.installApp()" style="width:auto;padding:8px 16px;font-size:14px;">
         Instalar
@@ -421,9 +506,17 @@
        SCRIPTS
        ============================================ -->
 
+  <!-- Firebase SDK v10 (compat mode - loads only when online) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <!-- Leaflet Map (OpenStreetMap - free, no API key needed) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Firebase config (must load before app modules) -->
+  <script src="js/firebase-config.js"></script>
 
   <!-- App modules (order matters: dependencies first) -->
   <script src="js/reports.js"></script>

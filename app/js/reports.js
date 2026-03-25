@@ -1,28 +1,93 @@
 /* ============================================
    AccesiRuta — Reports Module
-   localStorage-based accessibility report system
+   Firebase Firestore (when configured) or
+   localStorage fallback for accessibility reports
    ============================================ */
 
 var Reports = (function () {
   'use strict';
 
   var STORAGE_KEY = 'accesiruta_reports';
+  var FIRESTORE_COLLECTION = 'reports';
   var selectedType = null;
   var selectedRating = 0;
+
+  // Local cache of reports (used for both modes)
+  var cachedReports = null;
+  // Firestore unsubscribe function
+  var unsubscribeFirestore = null;
 
   var TYPE_LABELS = {
     rampa: 'Rampa accesible',
     escaleras: 'Escaleras',
     banco: 'Banco / Zona de descanso',
     pendiente: 'Pendiente pronunciada',
-    obstaculo: 'Obstáculo en la vía',
+    obstaculo: 'Obstaculo en la via',
   };
+
+  /* --- Check if Firestore is available --- */
+  function useFirestore() {
+    return (
+      typeof FirebaseConfig !== 'undefined' &&
+      FirebaseConfig.isConfigured() &&
+      FirebaseConfig.getDb() !== null
+    );
+  }
 
   /* --- Init --- */
   function init() {
     setupTypeButtons();
     setupStarRating();
     setupSubmit();
+
+    // If Firestore is available, start listening for real-time updates
+    if (useFirestore()) {
+      startFirestoreListener();
+    }
+  }
+
+  /* --- Firestore Real-Time Listener --- */
+  function startFirestoreListener() {
+    var db = FirebaseConfig.getDb();
+    if (!db) return;
+
+    // Unsubscribe previous listener if any
+    if (unsubscribeFirestore) {
+      unsubscribeFirestore();
+    }
+
+    try {
+      unsubscribeFirestore = db.collection(FIRESTORE_COLLECTION)
+        .orderBy('timestamp', 'desc')
+        .limit(200)
+        .onSnapshot(function (snapshot) {
+          var reports = [];
+          snapshot.forEach(function (doc) {
+            var data = doc.data();
+            data.id = doc.id;
+            reports.push(data);
+          });
+          // Reverse so oldest first (consistent with localStorage order)
+          cachedReports = reports.reverse();
+
+          // Refresh UI if the app is loaded
+          if (typeof App !== 'undefined' && typeof App.populateHome === 'function') {
+            App.populateHome();
+          }
+          if (typeof Profile !== 'undefined' && typeof Profile.refresh === 'function') {
+            Profile.refresh();
+          }
+          if (typeof MapModule !== 'undefined' && typeof MapModule.loadReportMarkers === 'function') {
+            MapModule.loadReportMarkers();
+          }
+        }, function (err) {
+          console.warn('[Firestore] Error en listener:', err);
+          // Fall back to local cache
+          cachedReports = null;
+        });
+    } catch (e) {
+      console.warn('[Firestore] No se pudo iniciar listener:', e);
+    }
   }
 
   /* --- Type Selection --- */
@@ -57,10 +122,10 @@ var Reports = (function () {
           var val = parseInt(s.getAttribute('data-value'));
           if (val <= selectedRating) {
             s.classList.add('filled');
-            s.textContent = '★';
+            s.textContent = '\u2605';
           } else {
             s.classList.remove('filled');
-            s.textContent = '☆';
+            s.textContent = '\u2606';
           }
         });
         if (label) {
@@ -87,13 +152,18 @@ var Reports = (function () {
       return;
     }
     if (selectedRating === 0) {
-      App.showToast('Selecciona una valoración');
+      App.showToast('Selecciona una valoracion');
       return;
     }
 
     var comment = document.getElementById('report-comment');
     var commentText = comment ? comment.value.trim() : '';
     var pos = App.getUserPosition();
+
+    // Get user info for the report
+    var userName = typeof App !== 'undefined' ? App.getUserName() : 'Usuario';
+    var userPhoto = typeof App !== 'undefined' ? App.getUserPhoto() : null;
+    var userUid = typeof App !== 'undefined' ? App.getUserUid() : 'anonymous';
 
     var report = {
       id: generateId(),
@@ -103,6 +173,9 @@ var Reports = (function () {
       lat: pos.lat,
       lng: pos.lng,
       timestamp: Date.now(),
+      userName: userName,
+      userPhoto: userPhoto,
+      userUid: userUid,
     };
 
     saveReport(report);
@@ -113,10 +186,14 @@ var Reports = (function () {
     if (formSection) formSection.style.display = 'none';
     if (successSection) successSection.style.display = 'flex';
 
+    // Update sync indicator on success screen
+    if (typeof App !== 'undefined') App.updateSyncIndicators();
+
     // Update profile stats
     if (typeof Profile !== 'undefined') Profile.addPoints(10);
 
-    App.showToast('¡Reporte guardado! +10 puntos');
+    var savedMsg = useFirestore() ? 'Reporte guardado en la nube! +10 puntos' : 'Reporte guardado! +10 puntos';
+    App.showToast(savedMsg);
 
     // Reset form after delay
     setTimeout(function () {
@@ -136,7 +213,7 @@ var Reports = (function () {
     var stars = document.querySelectorAll('.star-btn');
     stars.forEach(function (s) {
       s.classList.remove('filled');
-      s.textContent = '☆';
+      s.textContent = '\u2606';
     });
 
     var label = document.getElementById('rating-label');
@@ -148,6 +225,16 @@ var Reports = (function () {
 
   /* --- Storage --- */
   function getAll() {
+    // If we have a Firestore cache, use it
+    if (useFirestore() && cachedReports !== null) {
+      return cachedReports;
+    }
+
+    // Otherwise use localStorage
+    return getFromLocalStorage();
+  }
+
+  function getFromLocalStorage() {
     try {
       var data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : [];
@@ -157,9 +244,39 @@ var Reports = (function () {
   }
 
   function saveReport(report) {
-    var reports = getAll();
+    // Always save to localStorage as backup
+    var reports = getFromLocalStorage();
     reports.push(report);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+
+    // Also save to Firestore if available
+    if (useFirestore()) {
+      var db = FirebaseConfig.getDb();
+      if (db) {
+        // Use the report ID as the document ID
+        var docData = {
+          type: report.type,
+          rating: report.rating,
+          comment: report.comment,
+          lat: report.lat,
+          lng: report.lng,
+          timestamp: report.timestamp,
+          userName: report.userName || 'Usuario',
+          userPhoto: report.userPhoto || null,
+          userUid: report.userUid || 'anonymous',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        db.collection(FIRESTORE_COLLECTION).doc(report.id).set(docData)
+          .then(function () {
+            console.log('[Firestore] Reporte guardado:', report.id);
+          })
+          .catch(function (err) {
+            console.warn('[Firestore] Error guardando reporte:', err);
+            App.showToast('Guardado localmente (sin conexion a la nube)');
+          });
+      }
+    }
   }
 
   function getByProximity(lat, lng, radiusKm) {
@@ -203,5 +320,6 @@ var Reports = (function () {
     getCount: getCount,
     getByProximity: getByProximity,
     saveReport: saveReport,
+    useFirestore: useFirestore,
   };
 })();
