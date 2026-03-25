@@ -14,12 +14,12 @@ var FirebaseConfig = (function () {
   // https://console.firebase.google.com/ > Project Settings > General
   // =============================================
   var config = {
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID_HERE",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:0000000000000000000000"
+    apiKey: "AIzaSyAumkAzjlWU0NV2CbGtHfI8tb_b6-Kh5QY",
+    authDomain: "accesiruta.firebaseapp.com",
+    projectId: "accesiruta",
+    storageBucket: "accesiruta.firebasestorage.app",
+    messagingSenderId: "662194575190",
+    appId: "1:662194575190:web:c6de9708d4afef7992a8f7"
   };
 
   var _initialized = false;
