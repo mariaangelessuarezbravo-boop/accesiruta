@@ -956,6 +956,23 @@ var App = (function () {
       dirList.innerHTML = stepsHtml;
     }
 
+    // Show/hide transit button for long routes (> 2km)
+    var transitBtn = document.getElementById('rp-transit');
+    if (transitBtn) {
+      if (routeData.distance > 2000) {
+        transitBtn.style.display = 'flex';
+        transitBtn.onclick = function () {
+          var origin = routeData.originLat + ',' + routeData.originLng;
+          var dest = routeData.destLat + ',' + routeData.destLng;
+          var url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin +
+            '&destination=' + dest + '&travelmode=transit';
+          window.open(url, '_blank');
+        };
+      } else {
+        transitBtn.style.display = 'none';
+      }
+    }
+
     panel.style.display = 'block';
   }
 
@@ -1069,6 +1086,23 @@ var App = (function () {
 
       if (!tagsHtml) tagsHtml = '<span class="a11y-tag">Sin datos de accesibilidad en esta ruta</span>';
       tagsEl.innerHTML = tagsHtml;
+    }
+
+    // Transit button for long routes
+    var rdTransit = document.getElementById('rd-transit');
+    if (rdTransit) {
+      if (route.distance > 2000) {
+        rdTransit.style.display = 'block';
+        rdTransit.onclick = function () {
+          var origin = route.originLat + ',' + route.originLng;
+          var dest = route.destLat + ',' + route.destLng;
+          var url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin +
+            '&destination=' + dest + '&travelmode=transit';
+          window.open(url, '_blank');
+        };
+      } else {
+        rdTransit.style.display = 'none';
+      }
     }
 
     // Reports list

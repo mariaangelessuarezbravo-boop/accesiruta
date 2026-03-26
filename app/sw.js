@@ -3,7 +3,7 @@
    Cache-first for app assets, network-first for APIs
    ============================================ */
 
-var CACHE_VERSION = 'accesiruta-v8';
+var CACHE_VERSION = 'accesiruta-v9';
 var APP_SHELL_FILES = [
   './',
   './index.html',
