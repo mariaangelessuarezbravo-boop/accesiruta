@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.accesiruta.app",
+      "sha256_cert_fingerprints": [
+        "F8:C9:17:79:03:98:BD:16:4A:DB:F8:89:73:FE:C6:39:E3:9F:46:F9:D0:A1:89:17:9C:F4:12:AB:66:3B:70:89"
+      ]
+    }
+  }
+]
