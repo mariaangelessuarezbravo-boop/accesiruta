@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AccesiRuta — Tu camino accesible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --teal-900: #0B3D3B;
+  --teal-700: #0F5E5A;
+  --teal-500: #14857E;
+  --teal-400: #1BA89F;
+  --teal-300: #3DC4BB;
+  --teal-100: #D0F0ED;
+  --teal-50: #EEFAF9;
+  --amber-600: #D97706;
+  --amber-500: #F59E0B;
+  --amber-400: #FBBF24;
+  --amber-200: #FDE68A;
+  --amber-100: #FEF3C7;
+  --red-500: #EF4444;
+  --red-600: #DC2626;
+  --red-700: #B91C1C;
+  --red-100: #FEE2E2;
+  --cream: #FFFBF5;
+  --cream-dark: #F5EDE3;
+  --stone-100: #F5F0EB;
+  --stone-200: #E7E0D8;
+  --stone-300: #D4CCC2;
+  --stone-500: #8C8278;
+  --stone-600: #6B6158;
+  --stone-700: #4A423B;
+  --stone-800: #2D2824;
+  --green-500: #22C55E;
+  --green-100: #DCFCE7;
+  --shadow-sm: 0 1px 3px rgba(44,36,28,0.08);
+  --shadow-md: 0 4px 12px rgba(44,36,28,0.1);
+  --shadow-lg: 0 8px 30px rgba(44,36,28,0.12);
+  --shadow-xl: 0 16px 50px rgba(44,36,28,0.15);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: #1a1a1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Phone frame */
+.phone-frame {
+  width: 375px;
+  height: 812px;
+  background: var(--cream);
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 8px #1a1a1a, 0 0 0 10px #333, var(--shadow-xl);
+}
+
+/* Status bar */
+.status-bar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stone-800);
+  position: relative;
+  z-index: 100;
+}
+.status-bar .time { font-weight: 700; }
+.status-bar .icons { display: flex; gap: 5px; font-size: 12px; }
+
+/* Screen container */
+.screen-container {
+  position: relative;
+  height: calc(100% - 48px);
+  overflow: hidden;
+}
+
+.screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  opacity: 0;
+  transform: translateX(30px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.screen.exit-left {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+/* ===== SPLASH SCREEN ===== */
+#splash {
+  background: linear-gradient(165deg, var(--teal-700) 0%, var(--teal-900) 50%, #072726 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#splash::before {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(27,168,159,0.2) 0%, transparent 70%);
+  top: -100px; right: -150px;
+}
+#splash::after {
+  content: '';
+  position: absolute;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
+  bottom: -80px; left: -120px;
+}
+
+.splash-logo {
+  position: relative; z-index: 2;
+  text-align: center;
+  animation: splashIn 0.8s ease-out both;
+}
+.splash-icon {
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.12);
+  border-radius: var(--radius-xl);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  margin: 0 auto 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.splash-title {
+  font-family: 'Fraunces', serif;
+  font-size: 38px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.splash-title span {
+  color: var(--amber-400);
+}
+.splash-tagline {
+  font-size: 16px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 10px;
+  font-weight: 400;
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+}
+.splash-enter {
+  position: relative; z-index: 2;
+  margin-top: 60px;
+  background: white;
+  color: var(--teal-900);
+  border: none;
+  padding: 18px 48px;
+  border-radius: var(--radius-full);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: splashIn 0.8s ease-out 0.3s both;
+}
+.splash-enter:active {
+  transform: scale(0.96);
+  box-shadow: var(--shadow-sm);
+}
+.splash-dots {
+  position: absolute;
+  bottom: 60px;
+  display: flex; gap: 8px;
+  z-index: 2;
+  animation: splashIn 0.8s ease-out 0.5s both;
+}
+.splash-dots span {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+}
+.splash-dots span.active { background: var(--amber-400); width: 24px; border-radius: 4px; }
+
+@keyframes splashIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== HOME SCREEN ===== */
+#home {
+  background: var(--cream);
+  padding-bottom: 90px;
+}
+
+.home-header {
+  padding: 12px 24px 20px;
+  background: linear-gradient(180deg, var(--teal-50) 0%, var(--cream) 100%);
+}
+.home-greeting {
+  font-size: 14px;
+  color: var(--stone-500);
+  font-weight: 400;
+}
+.home-name {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--stone-800);
+  margin-top: 2px;
+}
+
+.search-box {
+  margin: 0 24px 20px;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--stone-200);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-box:active {
+  border-color: var(--teal-400);
+  box-shadow: 0 0 0 3px var(--teal-100);
+}
+.search-icon {
+  width: 40px; height: 40px;
+  background: var(--teal-100);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.search-text {
+  font-size: 15px;
+  color: var(--stone-500);
+}
+
+.quick-actions {
+  padding: 0 24px;
+  margin-bottom: 24px;
+}
+.quick-actions h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--stone-500);
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.quick-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.quick-card:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-md);
+  border-color: var(--teal-300);
+}
+.quick-card-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.quick-card-icon.teal { background: var(--teal-100); }
+.quick-card-icon.amber { background: var(--amber-100); }
+.quick-card-icon.red { background: var(--red-100); }
+.quick-card-icon.green { background: var(--green-100); }
+.quick-card-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stone-800);
+  line-height: 1.3;
+}
+.quick-card-desc {
+  font-size: 12px;
+  color: var(--stone-500);
+  line-height: 1.4;
+}
+
+.section-title {
+  padding: 0 24px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--stone-500);
+  font-weight: 600;
+}
+
+.nearby-list {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.nearby-item {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.nearby-item:active { transform: scale(0.98); }
+.nearby-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--teal-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.nearby-info { flex: 1; }
+.nearby-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--stone-800);
+}
+.nearby-detail {
+  font-size: 13px;
+  color: var(--stone-500);
+  margin-top: 2px;
+}
+.nearby-score {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal-500);
+  background: var(--teal-50);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+/* ===== MAP SCREEN ===== */
+#map {
+  background: var(--cream);
+  padding-bottom: 90px;
+}
+
+.map-search {
+  position: absolute;
+  top: 12px; left: 16px; right: 16px;
+  z-index: 20;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-lg);
+}
+.map-search input {
+  flex: 1;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--stone-800);
+  background: transparent;
+  outline: none;
+}
+.map-search input::placeholder { color: var(--stone-300); }
+
+.map-area {
+  width: 100%;
+  height: 100%;
+  background: #D8E8E4;
+  position: relative;
+  overflow: hidden;
+}
+
+/* SVG Map background */
+.map-bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.map-street {
+  fill: none;
+  stroke: #c0d4cf;
+  stroke-width: 18;
+  stroke-linecap: round;
+}
+.map-street-main {
+  fill: none;
+  stroke: #b0c8c2;
+  stroke-width: 28;
+  stroke-linecap: round;
+}
+.map-block {
+  fill: #C8DDD8;
+  rx: 4;
+}
+.map-park {
+  fill: #B8D4BA;
+  rx: 8;
+}
+.map-water {
+  fill: #A8CCD8;
+  rx: 6;
+}
+
+/* Route line */
+.map-route {
+  fill: none;
+  stroke: var(--teal-400);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 12 6;
+  animation: routeDash 1.5s linear infinite;
+}
+@keyframes routeDash {
+  to { stroke-dashoffset: -18; }
+}
+
+/* Map markers */
+.map-marker {
+  position: absolute;
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 10;
+}
+.map-marker:active { transform: scale(1.15); }
+.marker-dot {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--shadow-md);
+  border: 2.5px solid white;
+}
+.marker-dot.ramp { background: var(--teal-100); }
+.marker-dot.stairs { background: var(--amber-100); }
+.marker-dot.bench { background: var(--green-100); }
+.marker-dot.slope { background: var(--red-100); }
+.marker-dot.user { background: var(--teal-500); font-size: 14px; }
+.marker-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 3px;
+  color: var(--stone-700);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 100px; left: 16px;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--stone-600); font-weight: 500;
+}
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.map-fab {
+  position: absolute;
+  bottom: 100px; right: 16px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fab-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.fab-btn:active { transform: scale(0.92); }
+.fab-btn.primary { background: var(--teal-500); }
+
+/* ===== ROUTE DETAIL SCREEN ===== */
+#route {
+  background: var(--cream);
+  padding-bottom: 90px;
+}
+
+.route-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 15px;
+  color: var(--teal-700);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.route-hero {
+  margin: 0 24px 20px;
+  background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.route-hero::after {
+  content: '';
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  top: -60px; right: -40px;
+}
+.route-from-to {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.route-point {
+  flex: 1;
+}
+.route-point-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.route-point-name {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.route-arrow {
+  font-size: 20px;
+  opacity: 0.5;
+}
+.route-stats {
+  display: flex;
+  gap: 16px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding-top: 14px;
+}
+.route-stat {
+  text-align: center;
+  flex: 1;
+}
+.route-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.route-stat-label {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.route-score-card {
+  margin: 0 24px 16px;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+}
+.route-score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.route-score-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--stone-800);
+}
+.route-score-badge {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--teal-700);
+  background: var(--teal-50);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+.stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.star {
+  font-size: 24px;
+  color: var(--stone-200);
+}
+.star.filled { color: var(--amber-500); }
+.route-score-detail {
+  font-size: 13px;
+  color: var(--stone-500);
+  line-height: 1.5;
+}
+
+.terrain-list {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.terrain-item {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+}
+.terrain-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.terrain-info { flex: 1; }
+.terrain-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stone-800);
+}
+.terrain-desc {
+  font-size: 12px;
+  color: var(--stone-500);
+  margin-top: 2px;
+}
+.terrain-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+.terrain-badge.good { background: var(--green-100); color: #15803d; }
+.terrain-badge.warn { background: var(--amber-100); color: var(--amber-600); }
+.terrain-badge.bad { background: var(--red-100); color: var(--red-600); }
+
+.route-cta {
+  margin: 0 24px 24px;
+  width: calc(100% - 48px);
+  background: var(--teal-500);
+  color: white;
+  border: none;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.15s, background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.route-cta:active { transform: scale(0.97); background: var(--teal-700); }
+
+/* ===== REPORT SCREEN ===== */
+#report {
+  background: var(--cream);
+  padding-bottom: 90px;
+}
+
+.report-header {
+  padding: 16px 24px;
+  text-align: center;
+}
+.report-header h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--stone-800);
+}
+.report-header p {
+  font-size: 14px;
+  color: var(--stone-500);
+  margin-top: 4px;
+}
+
+.report-form {
+  padding: 0 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--stone-700);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.type-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.type-option {
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid var(--stone-200);
+  border-radius: var(--radius-full);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--stone-600);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.type-option:active,
+.type-option.selected {
+  border-color: var(--teal-400);
+  background: var(--teal-50);
+  color: var(--teal-700);
+}
+
+.rating-stars {
+  display: flex;
+  gap: 8px;
+}
+.rating-star {
+  width: 48px; height: 48px;
+  background: white;
+  border: 2px solid var(--stone-200);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--stone-300);
+}
+.rating-star.selected {
+  border-color: var(--amber-400);
+  background: var(--amber-100);
+  color: var(--amber-500);
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 16px;
+  border: 2px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--stone-800);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+}
+.form-textarea::placeholder { color: var(--stone-300); }
+.form-textarea:focus { border-color: var(--teal-400); }
+
+.photo-upload {
+  width: 100%;
+  padding: 24px;
+  border: 2px dashed var(--stone-200);
+  border-radius: var(--radius-md);
+  background: white;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.photo-upload:active { border-color: var(--teal-400); }
+.photo-upload-icon { font-size: 32px; margin-bottom: 8px; }
+.photo-upload-text { font-size: 14px; color: var(--stone-500); font-weight: 500; }
+
+.report-submit {
+  width: 100%;
+  background: var(--teal-500);
+  color: white;
+  border: none;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  margin-top: 8px;
+  transition: transform 0.15s, background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.report-submit:active { transform: scale(0.97); background: var(--teal-700); }
+
+/* ===== SOS SCREEN ===== */
+#sos {
+  background: linear-gradient(180deg, var(--cream) 0%, var(--red-100) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px 90px;
+}
+
+.sos-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--stone-800);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.sos-subtitle {
+  font-size: 14px;
+  color: var(--stone-500);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.sos-button-container {
+  position: relative;
+  margin-bottom: 40px;
+}
+.sos-ring {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 3px solid var(--red-500);
+  opacity: 0.15;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation: sosPulse 2s ease-out infinite;
+}
+.sos-ring:nth-child(2) { animation-delay: 0.5s; width: 240px; height: 240px; }
+.sos-ring:nth-child(3) { animation-delay: 1s; width: 280px; height: 280px; }
+
+@keyframes sosPulse {
+  0% { opacity: 0.2; transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
+}
+
+.sos-button {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red-500), var(--red-700));
+  border: none;
+  color: white;
+  font-family: 'Fraunces', serif;
+  font-size: 40px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(239,68,68,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.sos-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 16px rgba(239,68,68,0.5);
+}
+.sos-button-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.sos-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sos-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+}
+.sos-card-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--red-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.sos-card-info { flex: 1; }
+.sos-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stone-800);
+}
+.sos-card-desc {
+  font-size: 12px;
+  color: var(--stone-500);
+  margin-top: 2px;
+}
+
+/* ===== PROFILE SCREEN ===== */
+#profile {
+  background: var(--cream);
+  padding-bottom: 90px;
+}
+
+.profile-header {
+  background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
+  padding: 24px;
+  margin: 0 16px;
+  border-radius: var(--radius-lg);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.profile-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+.profile-name {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+.profile-level {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+.profile-badge {
+  background: var(--amber-400);
+  color: var(--stone-800);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.stats-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  flex: 1;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+}
+.stat-value {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--teal-700);
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--stone-500);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.community-feed {
+  padding: 0 16px;
+}
+.community-feed h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--stone-500);
+  margin-bottom: 14px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.feed-item {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--stone-100);
+}
+.feed-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.feed-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--teal-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.feed-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stone-800);
+}
+.feed-time {
+  font-size: 12px;
+  color: var(--stone-500);
+  margin-left: auto;
+}
+.feed-text {
+  font-size: 14px;
+  color: var(--stone-600);
+  line-height: 1.5;
+}
+.feed-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.feed-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--teal-50);
+  color: var(--teal-700);
+}
+
+/* ===== BOTTOM NAVIGATION ===== */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 82px;
+  background: white;
+  border-top: 1px solid var(--stone-200);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: 20px;
+  z-index: 50;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 6px 0;
+  font-family: 'DM Sans', sans-serif;
+  transition: transform 0.15s;
+}
+.nav-item:active { transform: scale(0.92); }
+.nav-icon {
+  font-size: 22px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--stone-500);
+}
+.nav-item.active .nav-label { color: var(--teal-700); }
+.nav-item.active .nav-icon { position: relative; }
+.nav-item.active .nav-icon::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  width: 20px;
+  height: 3px;
+  background: var(--teal-500);
+  border-radius: 2px;
+}
+.nav-item.sos-nav .nav-icon {
+  width: 44px; height: 44px;
+  background: var(--red-500);
+  border-radius: 50%;
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: -14px;
+  box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-item.sos-nav .nav-label { color: var(--red-500); }
+
+/* Toast notification */
+.toast {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--stone-800);
+  color: white;
+  padding: 14px 24px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">12:30</span>
+    <span class="icons">
+      <span>&#9679;</span>
+      <span>&#9679;</span>
+      <span>&#9679;</span>
+    </span>
+  </div>
+
+  <div class="screen-container">
+
+    <!-- SPLASH -->
+    <div id="splash" class="screen active">
+      <div class="splash-logo">
+        <div class="splash-icon">&#9855;</div>
+        <div class="splash-title">Accesi<span>Ruta</span></div>
+        <div class="splash-tagline">Tu camino accesible</div>
+      </div>
+      <button class="splash-enter" onclick="navigateTo('home')">Comenzar</button>
+      <div class="splash-dots">
+        <span class="active"></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="screen">
+      <div class="home-header">
+        <div class="home-greeting">Buenos dias</div>
+        <div class="home-name">Maria Angeles</div>
+      </div>
+
+      <div class="search-box" onclick="navigateTo('map')">
+        <div class="search-icon">&#128269;</div>
+        <div class="search-text">Buscar destino accesible...</div>
+      </div>
+
+      <div class="quick-actions">
+        <h3>Acciones rapidas</h3>
+        <div class="quick-grid">
+          <div class="quick-card" onclick="navigateTo('map')">
+            <div class="quick-card-icon teal">&#128506;</div>
+            <div class="quick-card-label">Ver mapa</div>
+            <div class="quick-card-desc">Rutas accesibles cerca</div>
+          </div>
+          <div class="quick-card" onclick="navigateTo('report')">
+            <div class="quick-card-icon amber">&#128221;</div>
+            <div class="quick-card-label">Reportar</div>
+            <div class="quick-card-desc">Anadir info de accesibilidad</div>
+          </div>
+          <div class="quick-card" onclick="navigateTo('sos')">
+            <div class="quick-card-icon red">&#128680;</div>
+            <div class="quick-card-label">Emergencia</div>
+            <div class="quick-card-desc">Boton SOS rapido</div>
+          </div>
+          <div class="quick-card" onclick="navigateTo('profile')">
+            <div class="quick-card-icon green">&#128101;</div>
+            <div class="quick-card-label">Comunidad</div>
+            <div class="quick-card-desc">Reportes recientes</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Cerca de ti</div>
+      <div class="nearby-list">
+        <div class="nearby-item" onclick="navigateTo('route')">
+          <div class="nearby-icon">&#9855;</div>
+          <div class="nearby-info">
+            <div class="nearby-name">Parque Retiro - Entrada Sur</div>
+            <div class="nearby-detail">350m &middot; Llano &middot; Rampa disponible</div>
+          </div>
+          <div class="nearby-score">4.8</div>
+        </div>
+        <div class="nearby-item" onclick="navigateTo('route')">
+          <div class="nearby-icon">&#127963;</div>
+          <div class="nearby-info">
+            <div class="nearby-name">Metro Sol - Ascensor</div>
+            <div class="nearby-detail">120m &middot; Acceso adaptado</div>
+          </div>
+          <div class="nearby-score">4.5</div>
+        </div>
+        <div class="nearby-item" onclick="navigateTo('route')">
+          <div class="nearby-icon">&#127830;</div>
+          <div class="nearby-info">
+            <div class="nearby-name">Cafe Central</div>
+            <div class="nearby-detail">200m &middot; Entrada a nivel &middot; Bano adaptado</div>
+          </div>
+          <div class="nearby-score">4.2</div>
+        </div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <button class="nav-item active" onclick="navigateTo('home')">
+          <span class="nav-icon">&#127968;</span>
+          <span class="nav-label">Inicio</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('map')">
+          <span class="nav-icon">&#128506;</span>
+          <span class="nav-label">Mapa</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('report')">
+          <span class="nav-icon">&#10010;</span>
+          <span class="nav-label">Reportar</span>
+        </button>
+        <button class="nav-item sos-nav" onclick="navigateTo('sos')">
+          <span class="nav-icon">SOS</span>
+          <span class="nav-label">SOS</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('profile')">
+          <span class="nav-icon">&#128100;</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="map" class="screen">
+      <div class="map-area">
+        <svg class="map-bg" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
+          <!-- Blocks -->
+          <rect class="map-block" x="20" y="60" width="100" height="80" rx="4"/>
+          <rect class="map-block" x="20" y="180" width="150" height="100" rx="4"/>
+          <rect class="map-block" x="250" y="60" width="105" height="120" rx="4"/>
+          <rect class="map-block" x="200" y="220" width="155" height="90" rx="4"/>
+          <rect class="map-block" x="20" y="340" width="120" height="100" rx="4"/>
+          <rect class="map-block" x="180" y="350" width="175" height="80" rx="4"/>
+          <rect class="map-block" x="20" y="500" width="160" height="70" rx="4"/>
+          <rect class="map-block" x="220" y="480" width="135" height="100" rx="4"/>
+          <rect class="map-block" x="60" y="620" width="130" height="80" rx="4"/>
+          <rect class="map-block" x="230" y="630" width="120" height="70" rx="4"/>
+          <!-- Park -->
+          <rect class="map-park" x="250" y="340" width="105" height="70" rx="8"/>
+          <!-- Water feature -->
+          <rect class="map-water" x="30" y="620" width="20" height="80" rx="6"/>
+          <!-- Streets -->
+          <line class="map-street-main" x1="150" y1="0" x2="150" y2="812"/>
+          <line class="map-street-main" x1="0" y1="300" x2="375" y2="300"/>
+          <line class="map-street" x1="0" y1="160" x2="375" y2="160"/>
+          <line class="map-street" x1="0" y1="450" x2="375" y2="450"/>
+          <line class="map-street" x1="0" y1="590" x2="375" y2="590"/>
+          <line class="map-street" x1="210" y1="0" x2="210" y2="812"/>
+          <line class="map-street" x1="60" y1="0" x2="60" y2="300"/>
+          <!-- Route -->
+          <polyline class="map-route" points="187,680 187,450 150,450 150,300 280,300 280,180"/>
+        </svg>
+
+        <!-- Map search bar -->
+        <div class="map-search">
+          <span>&#128269;</span>
+          <input type="text" placeholder="Parque Retiro - Entrada Sur" readonly>
+        </div>
+
+        <!-- Markers -->
+        <div class="map-marker" style="top: 140px; left: 120px;">
+          <div class="marker-dot ramp">&#9855;</div>
+          <div class="marker-label">Rampa</div>
+        </div>
+        <div class="map-marker" style="top: 260px; left: 240px;">
+          <div class="marker-dot stairs">&#128694;</div>
+          <div class="marker-label">Escalones</div>
+        </div>
+        <div class="map-marker" style="top: 410px; left: 100px;">
+          <div class="marker-dot bench">&#129681;</div>
+          <div class="marker-label">Asiento</div>
+        </div>
+        <div class="map-marker" style="top: 180px; left: 300px;">
+          <div class="marker-dot ramp">&#9855;</div>
+          <div class="marker-label">Rampa</div>
+        </div>
+        <div class="map-marker" style="top: 530px; left: 60px;">
+          <div class="marker-dot slope">&#9650;</div>
+          <div class="marker-label">Cuesta</div>
+        </div>
+        <div class="map-marker" style="top: 350px; left: 280px;">
+          <div class="marker-dot bench">&#129681;</div>
+          <div class="marker-label">Asiento</div>
+        </div>
+        <!-- User location -->
+        <div class="map-marker" style="top: 640px; left: 165px;">
+          <div class="marker-dot user" style="border-color: var(--teal-300);">&#128205;</div>
+          <div class="marker-label" style="color: var(--teal-700);">Tu</div>
+        </div>
+
+        <!-- Legend -->
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-dot" style="background: var(--teal-400);"></div>Rampa</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--amber-500);"></div>Escalones</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--green-500);"></div>Asiento</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--red-500);"></div>Cuesta</div>
+        </div>
+
+        <!-- FAB buttons -->
+        <div class="map-fab">
+          <button class="fab-btn" onclick="showToast('Ubicacion actualizada')">&#128204;</button>
+          <button class="fab-btn primary" onclick="navigateTo('route')" style="color:white;">&#10132;</button>
+        </div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <button class="nav-item" onclick="navigateTo('home')">
+          <span class="nav-icon">&#127968;</span>
+          <span class="nav-label">Inicio</span>
+        </button>
+        <button class="nav-item active" onclick="navigateTo('map')">
+          <span class="nav-icon">&#128506;</span>
+          <span class="nav-label">Mapa</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('report')">
+          <span class="nav-icon">&#10010;</span>
+          <span class="nav-label">Reportar</span>
+        </button>
+        <button class="nav-item sos-nav" onclick="navigateTo('sos')">
+          <span class="nav-icon">SOS</span>
+          <span class="nav-label">SOS</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('profile')">
+          <span class="nav-icon">&#128100;</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ROUTE DETAIL -->
+    <div id="route" class="screen">
+      <button class="route-back" onclick="navigateTo('map')">&#8592; Volver al mapa</button>
+
+      <div class="route-hero">
+        <div class="route-from-to">
+          <div class="route-point">
+            <div class="route-point-label">Desde</div>
+            <div class="route-point-name">Tu ubicacion</div>
+          </div>
+          <div class="route-arrow">&#10132;</div>
+          <div class="route-point">
+            <div class="route-point-label">Hasta</div>
+            <div class="route-point-name">Parque Retiro</div>
+          </div>
+        </div>
+        <div class="route-stats">
+          <div class="route-stat">
+            <div class="route-stat-value">1.2 km</div>
+            <div class="route-stat-label">Distancia</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-value">18 min</div>
+            <div class="route-stat-label">A pie</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-value">23</div>
+            <div class="route-stat-label">Reportes</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="route-score-card">
+        <div class="route-score-header">
+          <div class="route-score-title">Puntuacion de accesibilidad</div>
+          <div class="route-score-badge">4.2 / 5</div>
+        </div>
+        <div class="stars">
+          <span class="star filled">&#9733;</span>
+          <span class="star filled">&#9733;</span>
+          <span class="star filled">&#9733;</span>
+          <span class="star filled">&#9733;</span>
+          <span class="star">&#9733;</span>
+        </div>
+        <div class="route-score-detail">
+          Basado en 23 reportes de usuarios. Ruta mayormente llana con una cuesta leve en los ultimos 200m.
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top: 4px;">Detalles del terreno</div>
+      <div class="terrain-list">
+        <div class="terrain-item">
+          <div class="terrain-icon" style="background: var(--green-100);">&#128739;</div>
+          <div class="terrain-info">
+            <div class="terrain-name">Terreno llano</div>
+            <div class="terrain-desc">Primeros 800m sin desnivel</div>
+          </div>
+          <div class="terrain-badge good">Accesible</div>
+        </div>
+        <div class="terrain-item">
+          <div class="terrain-icon" style="background: var(--amber-100);">&#9650;</div>
+          <div class="terrain-info">
+            <div class="terrain-name">Cuesta leve</div>
+            <div class="terrain-desc">200m con pendiente del 5%</div>
+          </div>
+          <div class="terrain-badge warn">Moderado</div>
+        </div>
+        <div class="terrain-item">
+          <div class="terrain-icon" style="background: var(--teal-100);">&#9855;</div>
+          <div class="terrain-info">
+            <div class="terrain-name">Rampa de acceso</div>
+            <div class="terrain-desc">Entrada sur del parque</div>
+          </div>
+          <div class="terrain-badge good">Disponible</div>
+        </div>
+        <div class="terrain-item">
+          <div class="terrain-icon" style="background: var(--green-100);">&#129681;</div>
+          <div class="terrain-info">
+            <div class="terrain-name">Bancos disponibles</div>
+            <div class="terrain-desc">3 puntos de descanso en la ruta</div>
+          </div>
+          <div class="terrain-badge good">3 bancos</div>
+        </div>
+        <div class="terrain-item">
+          <div class="terrain-icon" style="background: var(--red-100);">&#128694;</div>
+          <div class="terrain-info">
+            <div class="terrain-name">Escalones</div>
+            <div class="terrain-desc">Alternativa sin escalones disponible</div>
+          </div>
+          <div class="terrain-badge bad">Evitar</div>
+        </div>
+      </div>
+
+      <button class="route-cta" onclick="showToast('Navegacion iniciada!')">
+        <span>&#128504;</span> Iniciar navegacion
+      </button>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <button class="nav-item" onclick="navigateTo('home')">
+          <span class="nav-icon">&#127968;</span>
+          <span class="nav-label">Inicio</span>
+        </button>
+        <button class="nav-item active" onclick="navigateTo('map')">
+          <span class="nav-icon">&#128506;</span>
+          <span class="nav-label">Mapa</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('report')">
+          <span class="nav-icon">&#10010;</span>
+          <span class="nav-label">Reportar</span>
+        </button>
+        <button class="nav-item sos-nav" onclick="navigateTo('sos')">
+          <span class="nav-icon">SOS</span>
+          <span class="nav-label">SOS</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('profile')">
+          <span class="nav-icon">&#128100;</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div id="report" class="screen">
+      <div class="report-header">
+        <h2>Reportar accesibilidad</h2>
+        <p>Ayuda a otros usuarios con tu reporte</p>
+      </div>
+
+      <div class="report-form">
+        <div class="form-group">
+          <label class="form-label">Tipo de reporte</label>
+          <div class="type-options">
+            <button class="type-option selected" onclick="selectType(this)">&#9855; Rampa</button>
+            <button class="type-option" onclick="selectType(this)">&#128694; Escalones</button>
+            <button class="type-option" onclick="selectType(this)">&#129681; Asiento</button>
+            <button class="type-option" onclick="selectType(this)">&#9650; Cuesta</button>
+            <button class="type-option" onclick="selectType(this)">&#9888; Obstaculo</button>
+            <button class="type-option" onclick="selectType(this)">&#128739; Llano</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Condicion (1-5)</label>
+          <div class="rating-stars">
+            <button class="rating-star selected" onclick="selectRating(1)">&#9733;</button>
+            <button class="rating-star selected" onclick="selectRating(2)">&#9733;</button>
+            <button class="rating-star selected" onclick="selectRating(3)">&#9733;</button>
+            <button class="rating-star" onclick="selectRating(4)">&#9733;</button>
+            <button class="rating-star" onclick="selectRating(5)">&#9733;</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Comentario</label>
+          <textarea class="form-textarea" placeholder="Describe la situacion... Ejemplo: Rampa con buena inclinacion, bien mantenida."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Foto (opcional)</label>
+          <div class="photo-upload" onclick="showToast('Camara abierta')">
+            <div class="photo-upload-icon">&#128247;</div>
+            <div class="photo-upload-text">Toca para anadir una foto</div>
+          </div>
+        </div>
+
+        <button class="report-submit" onclick="showToast('Reporte enviado! Gracias')">
+          <span>&#128228;</span> Enviar reporte
+        </button>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <button class="nav-item" onclick="navigateTo('home')">
+          <span class="nav-icon">&#127968;</span>
+          <span class="nav-label">Inicio</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('map')">
+          <span class="nav-icon">&#128506;</span>
+          <span class="nav-label">Mapa</span>
+        </button>
+        <button class="nav-item active" onclick="navigateTo('report')">
+          <span class="nav-icon">&#10010;</span>
+          <span class="nav-label">Reportar</span>
+        </button>
+        <button class="nav-item sos-nav" onclick="navigateTo('sos')">
+          <span class="nav-icon">SOS</span>
+          <span class="nav-label">SOS</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('profile')">
+          <span class="nav-icon">&#128100;</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SOS -->
+    <div id="sos" class="screen">
+      <div class="sos-title">Emergencia</div>
+      <div class="sos-subtitle">Pulsa el boton para pedir ayuda</div>
+
+      <div class="sos-button-container">
+        <div class="sos-ring"></div>
+        <div class="sos-ring"></div>
+        <div class="sos-ring"></div>
+        <button class="sos-button" onclick="triggerSOS()">
+          SOS
+          <span class="sos-button-sub">PULSAR</span>
+        </button>
+      </div>
+
+      <div class="sos-info">
+        <div class="sos-card">
+          <div class="sos-card-icon">&#128205;</div>
+          <div class="sos-card-info">
+            <div class="sos-card-title">Ubicacion automatica</div>
+            <div class="sos-card-desc">Se envia tu GPS al contacto de emergencia</div>
+          </div>
+        </div>
+        <div class="sos-card">
+          <div class="sos-card-icon">&#128222;</div>
+          <div class="sos-card-info">
+            <div class="sos-card-title">Llamada al 112</div>
+            <div class="sos-card-desc">Opcion de llamar a emergencias directamente</div>
+          </div>
+        </div>
+        <div class="sos-card">
+          <div class="sos-card-icon">&#128172;</div>
+          <div class="sos-card-info">
+            <div class="sos-card-title">Aviso a contactos</div>
+            <div class="sos-card-desc">Notifica a tus contactos de confianza</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <button class="nav-item" onclick="navigateTo('home')">
+          <span class="nav-icon">&#127968;</span>
+          <span class="nav-label">Inicio</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('map')">
+          <span class="nav-icon">&#128506;</span>
+          <span class="nav-label">Mapa</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('report')">
+          <span class="nav-icon">&#10010;</span>
+          <span class="nav-label">Reportar</span>
+        </button>
+        <button class="nav-item sos-nav active" onclick="navigateTo('sos')">
+          <span class="nav-icon">SOS</span>
+          <span class="nav-label">SOS</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('profile')">
+          <span class="nav-icon">&#128100;</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile" class="screen">
+      <div class="profile-header">
+        <div class="profile-avatar">&#128105;</div>
+        <div>
+          <div class="profile-name">Maria Angeles</div>
+          <div class="profile-level">Exploradora nivel 3</div>
+          <div class="profile-badge">&#11088; TOP CONTRIBUTOR</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value">47</div>
+          <div class="stat-label">Reportes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Rutas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">156</div>
+          <div class="stat-label">Puntos</div>
+        </div>
+      </div>
+
+      <div class="community-feed">
+        <h3>Actividad reciente</h3>
+
+        <div class="feed-item">
+          <div class="feed-user">
+            <div class="feed-avatar">&#128104;</div>
+            <div class="feed-username">Carlos M.</div>
+            <div class="feed-time">hace 15 min</div>
+          </div>
+          <div class="feed-text">Nueva rampa instalada en la entrada del centro comercial. Bien mantenida y con buena inclinacion.</div>
+          <div class="feed-tags">
+            <span class="feed-tag">&#9855; Rampa</span>
+            <span class="feed-tag">&#11088; 5/5</span>
+          </div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-user">
+            <div class="feed-avatar">&#128105;</div>
+            <div class="feed-username">Laura P.</div>
+            <div class="feed-time">hace 1 hora</div>
+          </div>
+          <div class="feed-text">Cuidado con la cuesta de Calle Mayor, muy empinada y sin barandilla. Necesita mejora urgente.</div>
+          <div class="feed-tags">
+            <span class="feed-tag">&#9650; Cuesta</span>
+            <span class="feed-tag" style="background: var(--red-100); color: var(--red-600);">&#9888; 2/5</span>
+          </div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-user">
+            <div class="feed-avatar">&#128116;</div>
+            <div class="feed-username">Antonio R.</div>
+            <div class="feed-time">hace 3 horas</div>
+          </div>
+          <div class="feed-text">Los bancos del Paseo de la Castellana estan en buen estado. Buen sitio para descansar.</div>
+          <div class="feed-tags">
+            <span class="feed-tag">&#129681; Asiento</span>
+            <span class="feed-tag">&#11088; 4/5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <button class="nav-item" onclick="navigateTo('home')">
+          <span class="nav-icon">&#127968;</span>
+          <span class="nav-label">Inicio</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('map')">
+          <span class="nav-icon">&#128506;</span>
+          <span class="nav-label">Mapa</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('report')">
+          <span class="nav-icon">&#10010;</span>
+          <span class="nav-label">Reportar</span>
+        </button>
+        <button class="nav-item sos-nav" onclick="navigateTo('sos')">
+          <span class="nav-icon">SOS</span>
+          <span class="nav-label">SOS</span>
+        </button>
+        <button class="nav-item active" onclick="navigateTo('profile')">
+          <span class="nav-icon">&#128100;</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+  </div>
+</div>
+
+<script>
+let currentScreen = 'splash';
+
+function navigateTo(screenId) {
+  if (screenId === currentScreen) return;
+  const current = document.getElementById(currentScreen);
+  const next = document.getElementById(screenId);
+
+  current.classList.remove('active');
+  current.classList.add('exit-left');
+
+  next.classList.remove('exit-left');
+  next.classList.add('active');
+  next.scrollTop = 0;
+
+  setTimeout(() => current.classList.remove('exit-left'), 350);
+  currentScreen = screenId;
+}
+
+function selectType(el) {
+  document.querySelectorAll('.type-option').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectRating(n) {
+  document.querySelectorAll('.rating-star').forEach((s, i) => {
+    s.classList.toggle('selected', i < n);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function triggerSOS() {
+  const btn = document.querySelector('.sos-button');
+  btn.style.background = 'linear-gradient(135deg, #991b1b, #7f1d1d)';
+  btn.innerHTML = '&#10003;<span class="sos-button-sub">ENVIADO</span>';
+  showToast('Alerta SOS enviada! Ubicacion compartida.');
+  setTimeout(() => {
+    btn.style.background = '';
+    btn.innerHTML = 'SOS<span class="sos-button-sub">PULSAR</span>';
+  }, 3000);
+}
+</script>
+
+</body>
+</html>

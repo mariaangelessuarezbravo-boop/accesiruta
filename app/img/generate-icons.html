@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><title>Generate AccesiRuta Icons</title></head>
+<body>
+<p>Open this file in a browser, right-click each canvas and "Save image as" to create the PNG icons.</p>
+<canvas id="c192" width="192" height="192"></canvas>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas) {
+  var ctx = canvas.getContext('2d');
+  var s = canvas.width;
+  // Background
+  ctx.fillStyle = '#0EA5E9';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, s, s, s * 0.2);
+  ctx.fill();
+  // Wheelchair symbol
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold ' + (s * 0.45) + 'px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('♿', s/2, s*0.42);
+  // Text
+  ctx.font = 'bold ' + (s * 0.1) + 'px sans-serif';
+  ctx.fillText('AccesiRuta', s/2, s*0.78);
+}
+drawIcon(document.getElementById('c192'));
+drawIcon(document.getElementById('c512'));
+</script>
+</body></html>
